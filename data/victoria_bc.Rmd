@@ -1,0 +1,110 @@
+---
+title: "Victoria, BC, Canada: climate norms"
+output: html_notebook
+---
+
+This file creates a single csv file with 1981-2010 climate norms sourced from Environment Canada.
+
+* source page: https://climate.weather.gc.ca/climate_normals/index_e.html
+
+The html tables were copied to the clipboard and pasted as tribble text using the [{datapasta}](https://milesmcbain.github.io/datapasta/) package Addins to RStudio
+
+```{r setup}
+# tidyverse
+library(dplyr)
+library(tidyr)
+
+# utilities
+library(here)
+
+```
+
+The weather station is VICTORIA INT'L A (the Victoria International Airport)
+
+Latitude:48°38'50.010" N
+Longitude:123°25'33.000" W
+Elevation:19.50 m
+Climate ID:1018620
+WMO ID:71799
+TC ID:YYJ
+
+
+https://climate.weather.gc.ca/climate_normals/results_1981_2010_e.html?searchType=stnName&txtStationName=victoria&searchMethod=contains&txtCentralLatMin=0&txtCentralLatSec=0&txtCentralLongMin=0&txtCentralLongSec=0&stnID=118&dispBack=0
+
+
+
+
+```{r}
+df_1018620 <- 
+read_csv(here("data", "normals-1018620-1981-2010.csv"),
+         skip = 14)
+
+df_vicint <- df_1018620 %>% 
+  rename("measure" = X1) %>% 
+  select(measure:Dec)
+
+df_vicint  
+
+```
+
+
+Structure as Japanese table:
+
++----------+------+
+| Japan    | Canada  |
++==========+======+
+| daily_mean_temp_C  | "Daily Average (°C)" |
++----------+------+
+| daily_max_temp_C  | "Daily Maximum (°C)" |
++----------+------+
+| daily_min_temp_C  | "Daily Minimum (°C)" |
++----------+------+
+| precipitation_mm  | "Precipitation (mm)" |
++----------+------+
+| relative_humidity_pct | "Average Relative Humidity - 1500LST (%)" |
++----------+------+
+| sunshine_duration_hrs  | "Total Hours" |
++----------+------+
+
+```{r}
+
+measure_list <- c(
+  "daily_mean_temp_C",
+  "daily_max_temp_C",
+  "daily_min_temp_C",
+  "precipitation_mm",
+  "relative_humidity_pct",
+  "sunshine_duration_hrs"
+)
+
+df_vicint_climate <-
+df_vicint %>% 
+  pivot_longer(-measure, names_to = "month", values_to = "value") %>% 
+  mutate("Station" = "Victoria") %>%
+  mutate(measure2 = case_when(
+    measure == "Daily Average (°C)" ~ "daily_mean_temp_C",
+    measure == "Daily Maximum (°C)" ~ "daily_max_temp_C",
+    measure == "Daily Minimum (°C)" ~ "daily_min_temp_C",
+    measure == "Precipitation (mm)" ~ "precipitation_mm",
+    measure == "Average Relative Humidity - 1500LST (%)" ~ "relative_humidity_pct",
+    measure == "Total Hours" ~ "sunshine_duration_hrs",
+    TRUE ~ measure)
+    ) %>% 
+  filter(measure2 %in% measure_list) %>% 
+  select(Station, month, measure2, value) %>% 
+  rename("measure" = measure2) %>% 
+  pivot_wider(Station:month, names_from = measure, values_from = value) %>% 
+  select(-sunshine_duration_hrs, sunshine_duration_hrs)
+
+df_vicint_climate
+
+df_vicint_climate <- df_vicint_climate %>% 
+  mutate_at(measure_list, as.numeric)
+
+write_csv(df_vicint_climate, here("data", "vicint_climate.csv"))
+saveRDS(df_vicint_climate, file = here("data", "vicint_climate.rds"))
+
+```
+
+
+

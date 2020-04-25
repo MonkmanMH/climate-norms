@@ -3,7 +3,7 @@ title: "Japan: climate norms"
 output: html_notebook
 ---
 
-This file creates a single csv file with climate norms sourced from the Japan Meteorological Agency.
+This file creates a single csv file with 1981-2010 climate norms sourced from the Japan Meteorological Agency.
 
 * source page: https://www.data.jma.go.jp/obd/stats/data/en/normal/normal.html
 
@@ -167,7 +167,7 @@ df_sunhrs %>%
 
 ```{r}
 
-japan_climate <-
+df_japan_climate <-
   df_temp_mean_l %>% 
     left_join(df_temp_max_l, by = c("Station", "month")) %>% 
     left_join(df_temp_min_l, by = c("Station", "month")) %>% 
@@ -175,15 +175,27 @@ japan_climate <-
     left_join(df_rh_l, by = c("Station", "month")) %>% 
     left_join(df_sunhrs_l, by = c("Station", "month")) 
 
-japan_climate
+df_japan_climate
+
+write_csv(df_japan_climate, here("data", "japan_climate.csv"))
+saveRDS(df_japan_climate, file = here("data", "japan_climate.rds"))
+
 
 ```
 
 
+Filter Tokyo, 12 months
 
 ```{r}
 
-write_csv(japan_climate, here("data", "japan_climate.csv"))
+df_tokyo_climate <-
+df_japan_climate %>% 
+  filter(Station == "Tokyo",
+         month != "Annual")
+
+df_tokyo_climate
+
+write_csv(df_tokyo_climate, here("data", "tokyo_climate.csv"))
+saveRDS(df_tokyo_climate, file = here("data", "tokyo_climate.rds"))
 
 ```
-
