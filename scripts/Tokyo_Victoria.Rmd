@@ -1,0 +1,66 @@
+---
+title: "Comparing climate:" 
+subtitle: "Tokyo to Victoria, BC"
+output: html_notebook
+---
+
+```{r setup}
+library(tidyverse)
+```
+
+
+read data, bind dataframes
+
+```{r}
+
+df_vicint_climate <- 
+  readRDS(file = here("data", "vicint_climate.rds"))
+
+df_tokyo_climate <- 
+  readRDS(file = here("data", "tokyo_climate.rds"))
+
+df_vic_tok <- rbind(df_vicint_climate, df_tokyo_climate)
+df_vic_tok
+
+
+# turn months into factors
+month_levels <- c(
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+)
+
+df_vic_tok$month <- factor(df_vic_tok$month, levels = month_levels)
+
+```
+
+
+
+```{r}
+
+ggplot(df_vic_tok, aes(x = month, y = daily_mean_temp_C, colour = Station)) +
+  geom_point()
+
+ggplot(df_vic_tok, aes(x = month, y = daily_mean_temp_C, group = Station)) +
+  geom_point() +
+  stat_summary(geom = "line")
+
+ggplot(df_vic_tok, aes(x = month, y = daily_mean_temp_C, group = Station)) +
+  geom_point(stat='summary', fun.y=sum) +
+  stat_summary(fun.y=sum, geom="line")
+
+ggplot(df_vic_tok, aes(x = month, y = daily_mean_temp_C, fill = Station)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  ylim(0, 30)
+
+```
+
+
+
+```{r}
+ggplot(df_vic_tok, aes(x = month, y = precipitation_mm, fill = Station)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  ylim(0, 250)
+
+
+```
+
